@@ -2,54 +2,93 @@ import pickle
 import numpy as np
 import streamlit as st
 
-# १. पेज लेआउट आणि टायटल सेट करणे
+# Page Configuration
 st.set_page_config(
     page_title="Placement Predictor", page_icon="🎓", layout="centered"
 )
 
-# २. आकर्षक डिझाइनसाठी Custom CSS (UI Polish)
+# Custom CSS for Dark UI matching the second image
 st.markdown(
     """
     <style>
-    /* मुख्य बॅकग्राउंड हलका ग्रे रंग */
+    /* Dark Background */
     .stApp {
-        background-color: #f8f9fa;
+        background-color: #0d1117;
+        color: #ffffff;
     }
     
-    /* टायटल स्टाइल */
+    /* Center Card Container */
+    .block-container {
+        max-width: 480px !important;
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+    
+    /* Card Design */
+    div[data-testid="stVerticalBlock"] > div:has(div.card-marker) {
+        background: #161b22;
+        border: 1px solid #30363d;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Headings */
     .main-title {
-        color: #1e3a8a;
+        color: #ffffff;
         text-align: center;
-        font-size: 2.2rem;
+        font-size: 24px;
         font-weight: 700;
-        margin-bottom: 0.5rem;
+        margin-bottom: 4px;
     }
     
     .sub-title {
-        color: #4b5563;
+        color: #8b949e;
         text-align: center;
-        font-size: 1rem;
-        margin-bottom: 2rem;
+        font-size: 13px;
+        margin-bottom: 25px;
+    }
+
+    /* Inputs Labels */
+    label {
+        color: #c9d1d9 !important;
+        font-weight: 600 !important;
+        font-size: 12px !important;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    /* Input Field Box Style */
+    div[data-baseweb="input"] {
+        background-color: #0d1117 !important;
+        border: 1px solid #30363d !important;
+        border-radius: 8px !important;
+        color: white !important;
     }
     
-    /* Predict Button चे स्टाइल */
+    /* Input Field Hover & Focus */
+    div[data-baseweb="input"]:focus-within {
+        border-color: #8a2be2 !important;
+    }
+
+    /* Gradient Predict Button */
     div.stButton > button {
         width: 100%;
-        background-color: #ff4b4b;
-        color: white;
-        font-size: 1.2rem;
-        font-weight: bold;
-        padding: 0.6rem;
-        border-radius: 10px;
+        background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 600;
+        padding: 12px;
+        border-radius: 8px;
         border: none;
+        margin-top: 15px;
+        cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0px 4px 10px rgba(255, 75, 75, 0.3);
     }
     
     div.stButton > button:hover {
-        background-color: #e03e3e;
-        color: white;
-        transform: translateY(-2px);
+        opacity: 0.9;
+        box-shadow: 0px 4px 15px rgba(168, 85, 247, 0.4);
     }
     </style>
 """,
@@ -57,10 +96,9 @@ st.markdown(
 )
 
 
-# ३. Perceptron Model (.pkl file) लोड करणे
+# Load Trained Perceptron Model
 @st.cache_resource
 def load_model():
-    # तुमच्या मॉडेल फाइलचे नाव 'perceptron.pkl' ठेवा
     with open("perceptron.pkl", "rb") as f:
         return pickle.load(f)
 
@@ -68,65 +106,54 @@ def load_model():
 try:
     model = load_model()
 except Exception as e:
-    st.error(
-        "⚠️ 'perceptron.pkl' ही मॉडेल फाइल सापडली नाही. कृपया ती याच फोल्डरमध्ये ठेवा."
-    )
+    st.error("Model file 'perceptron.pkl' not found!")
     st.stop()
 
-# ४. हेडिंग आणि डिस्क्रिप्शन
+# HTML Card Wrapper Start
+st.markdown("<div class='card-marker'></div>", unsafe_allow_html=True)
+
+# Title Section
 st.markdown(
-    "<h1 class='main-title'>🎓 Student Placement Predictor</h1>",
+    "<div class='main-title'>Placement Predictor</div>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<p class='sub-title'>तुमचा <b>CGPA</b> आणि <b>Resume Score</b> टाकून सिलेक्ट होण्याची शक्यता तपासा.</p>",
+    "<div class='sub-title'>Perceptron Categorical Classifier</div>",
     unsafe_allow_html=True,
 )
 
-st.markdown("---")
+# Input Fields
+cgpa = st.number_input(
+    "CGPA (0 - 10)",
+    min_value=0.0,
+    max_value=10.0,
+    value=7.5,
+    step=0.1,
+    format="%.1f",
+)
 
-# ५. इनपुट कार्ड लेआउट (दोन कॉलम्स)
-col1, col2 = st.columns(2)
+resume_score = st.number_input(
+    "RESUME SCORE (0 - 10)",
+    min_value=0.0,
+    max_value=10.0,
+    value=8.0,
+    step=0.1,
+    format="%.1f",
+)
 
-with col1:
-    cgpa = st.number_input(
-        "📊 CGPA (0.0 to 10.0)",
-        min_value=0.0,
-        max_value=10.0,
-        value=7.5,
-        step=0.1,
-        help="तुमचा CGPA प्रविष्ट करा",
-    )
-
-with col2:
-    resume_score = st.number_input(
-        "📄 Resume Score (0.0 to 10.0)",
-        min_value=0.0,
-        max_value=10.0,
-        value=7.0,
-        step=0.1,
-        help="तुमचा Resume Score प्रविष्ट करा",
-    )
-
-st.write("")  # Space
-
-# ६. Predict Button Logic
-if st.button("🚀 Predict Placement"):
-    # प्रेडिक्ट बटण क्लिक झाल्यावर फुगे/बॅलन्स येतील
+# Prediction Logic
+if st.button("Predict Status"):
+    # Trigger Balloons Animation
     st.balloons()
 
-    # Model साठी Input Array तयार करणे
+    # Model Input Array
     input_data = np.array([[cgpa, resume_score]])
-
-    # प्रेडिक्शन
     prediction = model.predict(input_data)
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    # निकाल दाखवणे
+    # Output Result Display matching 2nd Image style
     if prediction[0] == 1:
-        st.success("🎉 **अभिनंदन! तुम्ही प्लेसमेंटसाठी सिलेक्ट होऊ शकता.**")
+        st.success("🎉 Category: Placed")
     else:
-        st.error(
-            "⚠️ **सध्या सिलेक्ट होण्याची शक्यता कमी आहे. CGPA किंवा Resume Score वाढवण्याचा प्रयत्न करा.**"
-        )
+        st.error("⚠️ Category: Not Placed")
