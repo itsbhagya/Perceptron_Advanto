@@ -1,212 +1,137 @@
+import os
 import pickle
 import numpy as np
 import streamlit as st
+from sklearn.linear_model import Perceptron
 
-# 1. Streamlit Page Config
+# ==============================================================================
+# 1. Automatic Model Creation Logic (Runs if model.pkl does not exist)
+# ==============================================================================
+MODEL_FILE = "model.pkl"
+
+if not os.path.exists(MODEL_FILE):
+    # Training sample data (CGPA and Resume Score)
+    # Features: ['cgpa', 'resume_score']
+    X_train = np.array([
+        [5.0, 50],
+        [6.0, 60],
+        [6.5, 65],
+        [7.0, 70],
+        [7.8, 80],
+        [8.5, 85],
+        [9.0, 90],
+        [9.5, 95]
+    ])
+    # Labels: 0 = Not Placed, 1 = Placed
+    y_train = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+
+    # Perceptron Model Configuration matching standard scikit-learn settings
+    model = Perceptron(max_iter=1000, random_state=0)
+    model.fit(X_train, y_train)
+
+    # Save model as model.pkl
+    with open(MODEL_FILE, "wb") as f:
+        pickle.dump(model, f)
+
+# ==============================================================================
+# 2. Streamlit Web Application Interface
+# ==============================================================================
 st.set_page_config(
-    page_title="Placement Predictor", page_icon="🎓", layout="centered"
+    page_title="Placement Predictor",
+    page_icon="🎓",
+    layout="centered"
 )
 
-# 2. Perfect Dark Theme Glassmorphism CSS
-st.markdown(
-    """
+# Custom Styling
+st.markdown("""
     <style>
-    /* Background Gradient */
     .stApp {
-        background: radial-gradient(circle at center, #1b1b3a 0%, #0b0b18 100%);
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* Hide Streamlit Native Header & Footer */
-    header, footer, #MainMenu {
-        visibility: hidden;
-    }
-
-    /* Limit container width */
-    .block-container {
-        max-width: 450px !important;
-        padding-top: 4rem !important;
-        padding-bottom: 2rem !important;
-    }
-
-    /* Form Container styling as single card */
-    div[data-testid="stForm"] {
-        background: rgba(26, 26, 48, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        padding: 30px 25px !important;
-        box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(10px);
-    }
-
-    /* Header Styling */
-    .card-header {
-        text-align: center;
-        margin-bottom: 25px;
-    }
-
-    .main-title {
+        background-color: #0e1117;
         color: #ffffff;
-        font-size: 22px;
-        font-weight: 700;
-        margin-bottom: 4px;
-        letter-spacing: -0.3px;
     }
-
-    .sub-title {
-        color: #7b7b9d;
-        font-size: 13px;
-        font-weight: 400;
-    }
-
-    /* Input Field Labels */
-    .stNumberInput label {
-        color: #8f8fae !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.8px !important;
-        text-transform: uppercase;
-        margin-bottom: 6px !important;
-    }
-
-    /* Dark Input Box Styling */
-    div[data-baseweb="input"] {
-        background-color: #121225 !important;
-        border: 1px solid #232342 !important;
-        border-radius: 10px !important;
-        padding: 2px 4px;
-    }
-
-    div[data-baseweb="input"]:focus-within {
-        border-color: #a855f7 !important;
-        box-shadow: 0 0 12px rgba(168, 85, 247, 0.3) !important;
-    }
-
-    input {
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        font-size: 15px !important;
-    }
-
-    /* Gradient Submit Button */
-    div[data-testid="stFormSubmitButton"] > button {
+    .stButton>button {
         width: 100%;
-        background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
-        color: #ffffff;
-        font-size: 15px;
-        font-weight: 600;
+        background-color: #00c853;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
         padding: 12px;
-        border-radius: 10px;
+        border-radius: 8px;
         border: none;
-        margin-top: 10px;
-        box-shadow: 0px 4px 15px rgba(168, 85, 247, 0.4);
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
     }
-
-    div[data-testid="stFormSubmitButton"] > button:hover {
-        opacity: 0.95;
-        transform: translateY(-1px);
-        box-shadow: 0px 6px 20px rgba(168, 85, 247, 0.6);
-    }
-
-    /* Custom Result Banner */
-    .result-box-placed {
-        background-color: rgba(34, 197, 94, 0.12);
-        border: 1px solid #22c55e;
-        color: #4ade80;
-        padding: 12px;
-        border-radius: 10px;
-        text-align: center;
-        font-weight: 600;
-        font-size: 14px;
-        margin-top: 15px;
-    }
-
-    .result-box-not-placed {
-        background-color: rgba(239, 68, 68, 0.12);
-        border: 1px solid #ef4444;
-        color: #fca5a5;
-        padding: 12px;
-        border-radius: 10px;
-        text-align: center;
-        font-weight: 600;
-        font-size: 14px;
-        margin-top: 15px;
+    .stButton>button:hover {
+        background-color: #00e676;
     }
     </style>
-""",
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
 
+# App Title
+st.title("🎓 Candidate Placement Predictor")
+st.write("Aapne `CGPA` aur `Resume Score` ke basis par model ka outcome predict karein.")
 
-# 3. Model Loader
+st.divider()
+
+# Load Saved Model Function
 @st.cache_resource
-def load_model():
-    with open("perceptron.pkl", "rb") as f:
+def get_model():
+    with open(MODEL_FILE, "rb") as f:
         return pickle.load(f)
 
+perceptron_model = get_model()
 
-try:
-    model = load_model()
-except Exception:
-    st.error("Model file 'perceptron.pkl' not found!")
-    st.stop()
+# Input UI Fields
+col1, col2 = st.columns(2)
 
-# 4. Main Form Wrapper (Puts everything inside a single card)
-with st.form("prediction_form", clear_on_submit=False):
-    # Card Header
-    st.markdown(
-        """
-        <div class="card-header">
-            <div class="main-title">Placement Predictor</div>
-            <div class="sub-title">Perceptron Categorical Classifier</div>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    # Input 1: CGPA
-    cgpa = st.number_input(
-        "CGPA (0 - 10)",
+with col1:
+    cgpa_input = st.number_input(
+        "Enter CGPA (0.0 - 10.0)",
         min_value=0.0,
         max_value=10.0,
         value=7.5,
-        step=0.1,
-        format="%.1f",
+        step=0.1
     )
 
-    # Input 2: Resume Score
-    resume_score = st.number_input(
-        "RESUME SCORE (0 - 10)",
-        min_value=0.0,
-        max_value=10.0,
-        value=8.0,
-        step=0.1,
-        format="%.1f",
+with col2:
+    resume_input = st.number_input(
+        "Enter Resume Score (0 - 100)",
+        min_value=0,
+        max_value=100,
+        value=75,
+        step=1
     )
 
-    # Submit Button
-    submitted = st.form_submit_button("Predict Status")
+st.write("")  # Spacing
 
-# 5. Prediction Logic and Display Output inside/below the Form State
-if submitted:
-    # Trigger Balloon Animation
-    st.balloons()
-
-    # Model Inference
-    input_data = np.array([[cgpa, resume_score]])
-    prediction = model.predict(input_data)
-
-    # Show Output inside Card Style
-    if prediction[0] == 1:
-        st.markdown(
-            '<div class="result-box-placed">🎉 Category: Placed</div>',
-            unsafe_allow_html=True,
-        )
+# Prediction Button & Logic
+if st.button("🔮 Check Placement Status"):
+    # Reshape input data for Scikit-Learn
+    features = np.array([[cgpa_input, resume_input]])
+    
+    # Predict output
+    result = perceptron_model.predict(features)[0]
+    
+    st.divider()
+    
+    if result == 1:
+        st.balloons()
+        st.success("🎉 **Selection Chances High:** Candidate Placement ke liye eligible hai!")
     else:
-        st.markdown(
-            '<div class="result-box-not-placed">⚠️ Category: Not Placed</div>',
-            unsafe_allow_html=True,
-        )
+        st.error("⚠️ **Selection Chances Low:** Candidate ko CGPA / Resume Score improve karne ki zaroorat hai.")
+
+st.caption("Model Architecture: Scikit-Learn Perceptron Classifier")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
