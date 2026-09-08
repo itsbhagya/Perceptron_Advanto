@@ -1,20 +1,14 @@
-```python
-from flask import Flask, render_template_string, request
+from flask import Flask, request, render_template_string
 import pickle
 import numpy as np
 
 app = Flask(__name__)
 
-# ---------------------------------------------------
-# Load trained Perceptron model
-# ---------------------------------------------------
+# Load Perceptron model
 with open("perceptron.pkl", "rb") as file:
     model = pickle.load(file)
 
 
-# ---------------------------------------------------
-# HTML + CSS + JavaScript
-# ---------------------------------------------------
 HTML = """
 <!DOCTYPE html>
 <html lang="en">
@@ -22,10 +16,11 @@ HTML = """
 <head>
 
     <meta charset="UTF-8">
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Perceptron ML Predictor</title>
+    <title>Placement Predictor</title>
 
     <style>
 
@@ -33,433 +28,352 @@ HTML = """
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Segoe UI", Arial, sans-serif;
         }
 
         body {
+
             min-height: 100vh;
-            background:
-                radial-gradient(circle at top left,
-                    #4f46e5 0%,
-                    transparent 30%),
-                radial-gradient(circle at bottom right,
-                    #9333ea 0%,
-                    transparent 30%),
-                #0f172a;
-
-            color: #ffffff;
-            padding: 30px;
-        }
-
-        /* ------------------------------------
-           Main Dashboard
-        ------------------------------------ */
-
-        .dashboard {
-            max-width: 1150px;
-            margin: auto;
-        }
-
-        /* ------------------------------------
-           Header
-        ------------------------------------ */
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 35px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .brand-icon {
-            width: 55px;
-            height: 55px;
-            border-radius: 16px;
 
             display: flex;
+
             justify-content: center;
+
             align-items: center;
 
-            font-size: 27px;
+            padding: 20px;
+
+            font-family:
+                "Segoe UI",
+                Arial,
+                sans-serif;
 
             background:
-                linear-gradient(135deg,
-                #6366f1,
-                #a855f7);
+                radial-gradient(
+                    circle at 20% 20%,
+                    rgba(92, 82, 200, 0.20),
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at 80% 80%,
+                    rgba(120, 60, 200, 0.15),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #101331,
+                    #171a42,
+                    #202052
+                );
 
-            box-shadow:
-                0 10px 30px rgba(99,102,241,0.35);
+            color: white;
         }
 
-        .brand h1 {
-            font-size: 26px;
-        }
 
-        .brand p {
-            color: #94a3b8;
-            font-size: 13px;
-            margin-top: 3px;
-        }
-
-        .status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-
-            padding: 9px 15px;
-
-            border-radius: 30px;
-
-            background: rgba(34,197,94,0.12);
-            border: 1px solid rgba(34,197,94,0.25);
-
-            color: #86efac;
-
-            font-size: 13px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-
-            background: #22c55e;
-
-            border-radius: 50%;
-
-            box-shadow:
-                0 0 12px #22c55e;
-        }
-
-        /* ------------------------------------
-           Grid
-        ------------------------------------ */
-
-        .grid {
-            display: grid;
-
-            grid-template-columns:
-                1.2fr 0.8fr;
-
-            gap: 25px;
-        }
-
-        /* ------------------------------------
-           Cards
-        ------------------------------------ */
+        /* Main Card */
 
         .card {
-            background: rgba(15,23,42,0.72);
 
-            border: 1px solid
-                rgba(255,255,255,0.09);
+            width: 100%;
 
-            border-radius: 22px;
+            max-width: 550px;
 
-            padding: 30px;
+            padding: 46px 36px;
 
-            backdrop-filter: blur(15px);
+            border-radius: 28px;
+
+            background:
+                rgba(37, 38, 82, 0.82);
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
 
             box-shadow:
-                0 20px 50px
-                rgba(0,0,0,0.25);
+                0 30px 80px
+                rgba(0, 0, 0, 0.35);
+
+            backdrop-filter: blur(18px);
+
+            animation:
+                cardAppear 0.7s ease;
         }
 
-        .card-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+
+        /* Heading */
+
+        .header {
+
+            text-align: center;
+
+            margin-bottom: 35px;
+        }
+
+
+        .header h1 {
+
+            font-size: 38px;
+
+            font-weight: 700;
+
+            letter-spacing: -1px;
+
+            color: #f4f4ff;
+
+            margin-bottom: 8px;
+        }
+
+
+        .header p {
+
+            font-size: 16px;
+
+            color: #a5a7c5;
+
+        }
+
+
+        /* Form */
+
+        .form-group {
 
             margin-bottom: 25px;
         }
 
-        .card-title h2 {
-            font-size: 19px;
-        }
 
-        .card-title span {
-            font-size: 22px;
-        }
+        .form-group label {
 
-        /* ------------------------------------
-           Input
-        ------------------------------------ */
+            display: block;
 
-        .input-group {
-            margin-bottom: 23px;
-        }
-
-        .label-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 9px;
-        }
-
-        label {
-            color: #e2e8f0;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .range {
-            color: #818cf8;
-            font-size: 12px;
-        }
-
-        input {
-            width: 100%;
-
-            padding: 15px 16px;
-
-            border-radius: 13px;
-
-            border: 1px solid
-                rgba(255,255,255,0.12);
-
-            background: rgba(255,255,255,0.055);
-
-            color: white;
+            margin-bottom: 10px;
 
             font-size: 16px;
+
+            font-weight: 600;
+
+            color: #aeb0ca;
+        }
+
+
+        .input-wrapper {
+
+            position: relative;
+        }
+
+
+        input {
+
+            width: 100%;
+
+            height: 62px;
+
+            padding:
+                0 20px;
+
+            border-radius: 15px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
 
             outline: none;
 
-            transition: 0.3s;
+            background:
+                rgba(12, 16, 43, 0.72);
+
+            color: #ffffff;
+
+            font-size: 18px;
+
+            transition: all 0.3s ease;
         }
+
 
         input::placeholder {
-            color: #64748b;
+
+            color: #626581;
         }
 
+
         input:focus {
-            border-color: #818cf8;
+
+            border-color: #7568ff;
 
             box-shadow:
                 0 0 0 4px
-                rgba(129,140,248,0.12);
+                rgba(117, 104, 255, 0.12);
+
+            background:
+                rgba(12, 16, 43, 0.9);
         }
 
-        /* ------------------------------------
-           Predict Button
-        ------------------------------------ */
+
+        /* Predict Button */
 
         .predict-btn {
+
             width: 100%;
 
-            padding: 16px;
+            height: 60px;
+
+            margin-top: 8px;
 
             border: none;
 
-            border-radius: 14px;
+            border-radius: 15px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #6266f5,
+                    #a64df0
+                );
 
             color: white;
 
-            font-size: 16px;
+            font-size: 18px;
 
             font-weight: 700;
 
             cursor: pointer;
 
-            background:
-                linear-gradient(135deg,
-                #6366f1,
-                #a855f7);
-
             box-shadow:
                 0 12px 30px
-                rgba(99,102,241,0.28);
+                rgba(120, 80, 240, 0.30);
 
-            transition: 0.3s;
+            transition:
+                transform 0.25s ease,
+                box-shadow 0.25s ease;
         }
+
 
         .predict-btn:hover {
-            transform: translateY(-3px);
+
+            transform:
+                translateY(-2px);
 
             box-shadow:
-                0 18px 35px
-                rgba(99,102,241,0.4);
+                0 16px 35px
+                rgba(120, 80, 240, 0.42);
         }
+
 
         .predict-btn:active {
-            transform: scale(0.98);
+
+            transform:
+                scale(0.98);
         }
 
-        /* ------------------------------------
-           Model Card
-        ------------------------------------ */
 
-        .model-icon {
-            width: 70px;
-            height: 70px;
+        /* Result */
 
-            margin-bottom: 18px;
+        .result {
 
-            border-radius: 20px;
+            margin-top: 35px;
 
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 20px;
 
-            font-size: 34px;
-
-            background:
-                linear-gradient(135deg,
-                rgba(99,102,241,0.25),
-                rgba(168,85,247,0.25));
-
-            border: 1px solid
-                rgba(129,140,248,0.25);
-        }
-
-        .model-name {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 7px;
-        }
-
-        .model-description {
-            color: #94a3b8;
-            font-size: 13px;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-
-        .stats {
-            display: grid;
-
-            grid-template-columns: 1fr 1fr;
-
-            gap: 12px;
-        }
-
-        .stat {
-            padding: 16px;
-
-            border-radius: 14px;
-
-            background:
-                rgba(255,255,255,0.04);
-
-            border: 1px solid
-                rgba(255,255,255,0.06);
-        }
-
-        .stat-label {
-            color: #64748b;
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        /* ------------------------------------
-           Result
-        ------------------------------------ */
-
-        .result-card {
-            margin-top: 25px;
-
-            grid-column: 1 / -1;
+            border-radius: 15px;
 
             text-align: center;
+
+            animation:
+                resultAppear 0.55s ease;
         }
 
-        .result-icon {
-            width: 90px;
-            height: 90px;
 
-            margin: 5px auto 18px;
+        .result.placed {
 
-            border-radius: 50%;
-
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            font-size: 42px;
-
-            animation: pop 0.6s ease;
-        }
-
-        .success {
             background:
-                rgba(34,197,94,0.12);
+                rgba(34, 197, 94, 0.12);
 
             border:
-                1px solid rgba(34,197,94,0.3);
-
-            box-shadow:
-                0 0 35px rgba(34,197,94,0.18);
+                1px solid
+                rgba(34, 197, 94, 0.35);
         }
 
-        .danger {
+
+        .result.not-placed {
+
             background:
-                rgba(239,68,68,0.12);
+                rgba(239, 68, 68, 0.12);
 
             border:
-                1px solid rgba(239,68,68,0.3);
-
-            box-shadow:
-                0 0 35px rgba(239,68,68,0.18);
+                1px solid
+                rgba(239, 68, 68, 0.35);
         }
+
 
         .result-title {
-            font-size: 28px;
-            margin-bottom: 7px;
+
+            font-size: 20px;
+
+            font-weight: 700;
+
+            margin-bottom: 12px;
         }
 
-        .result-subtitle {
-            color: #94a3b8;
-            font-size: 14px;
+
+        .placed .result-title {
+
+            color: #69e89b;
         }
 
-        /* ------------------------------------
-           Confidence
-        ------------------------------------ */
+
+        .not-placed .result-title {
+
+            color: #ff7777;
+        }
+
+
+        /* Confidence */
 
         .confidence {
-            max-width: 600px;
-            margin: 28px auto 0;
+
+            margin-top: 17px;
+
             text-align: left;
         }
 
-        .confidence-top {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 9px;
-        }
 
-        .confidence-top span:first-child {
-            color: #cbd5e1;
+        .confidence-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            margin-bottom: 8px;
+
+            color: #aeb0ca;
+
             font-size: 13px;
         }
 
+
         .confidence-value {
-            color: #818cf8;
+
+            color: #b8aaff;
+
             font-weight: 700;
         }
 
+
         .progress {
-            height: 10px;
+
+            width: 100%;
+
+            height: 9px;
+
+            background:
+                rgba(255, 255, 255, 0.08);
 
             border-radius: 20px;
-
-            background: #1e293b;
 
             overflow: hidden;
         }
 
+
         .progress-bar {
+
             height: 100%;
 
             width: {{ confidence }}%;
@@ -467,82 +381,159 @@ HTML = """
             border-radius: 20px;
 
             background:
-                linear-gradient(90deg,
-                #6366f1,
-                #a855f7);
+                linear-gradient(
+                    90deg,
+                    #6366f1,
+                    #b04cf3
+                );
 
             animation:
-                progressAnimation 1.2s ease;
+                progress 1.2s ease;
         }
 
-        /* ------------------------------------
-           Footer
-        ------------------------------------ */
 
-        .footer {
+        /* Model Info */
+
+        .model-info {
+
             text-align: center;
 
-            margin-top: 30px;
+            margin-top: 25px;
 
-            color: #64748b;
+            color: #777b9e;
 
             font-size: 12px;
+
+            line-height: 1.6;
         }
 
-        /* ------------------------------------
-           Animations
-        ------------------------------------ */
 
-        @keyframes pop {
+        .model-info strong {
 
-            0% {
-                transform: scale(0);
-                opacity: 0;
-            }
-
-            70% {
-                transform: scale(1.15);
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
+            color: #999cc0;
         }
 
-        @keyframes progressAnimation {
+
+        /* Error */
+
+        .error {
+
+            margin-top: 25px;
+
+            padding: 15px;
+
+            border-radius: 13px;
+
+            text-align: center;
+
+            color: #ff8585;
+
+            background:
+                rgba(239, 68, 68, 0.10);
+
+            border:
+                1px solid
+                rgba(239, 68, 68, 0.25);
+
+            animation:
+                resultAppear 0.5s ease;
+        }
+
+
+        /* Animations */
+
+        @keyframes cardAppear {
 
             from {
-                width: 0;
+
+                opacity: 0;
+
+                transform:
+                    translateY(25px)
+                    scale(0.97);
             }
 
             to {
+
+                opacity: 1;
+
+                transform:
+                    translateY(0)
+                    scale(1);
+            }
+        }
+
+
+        @keyframes resultAppear {
+
+            from {
+
+                opacity: 0;
+
+                transform:
+                    translateY(15px);
+            }
+
+            to {
+
+                opacity: 1;
+
+                transform:
+                    translateY(0);
+            }
+        }
+
+
+        @keyframes progress {
+
+            from {
+
+                width: 0%;
+            }
+
+            to {
+
                 width: {{ confidence }}%;
             }
         }
 
-        /* ------------------------------------
-           Mobile
-        ------------------------------------ */
 
-        @media (max-width: 800px) {
+        /* Mobile */
+
+        @media (max-width: 600px) {
 
             body {
-                padding: 18px;
+
+                padding: 15px;
             }
 
-            .grid {
-                grid-template-columns: 1fr;
+            .card {
+
+                padding:
+                    35px 22px;
+
+                border-radius: 22px;
             }
 
-            .result-card {
-                grid-column: auto;
+            .header h1 {
+
+                font-size: 30px;
             }
 
-            .header {
-                align-items: flex-start;
+            .header p {
+
+                font-size: 14px;
             }
 
+            input {
+
+                height: 58px;
+            }
+
+            .predict-btn {
+
+                height: 58px;
+            }
         }
 
     </style>
@@ -552,318 +543,200 @@ HTML = """
 
 <body>
 
-<div class="dashboard">
 
-    <!-- HEADER -->
+<div class="card">
+
+
+    <!-- Header -->
 
     <div class="header">
 
-        <div class="brand">
+        <h1>
+            Placement Predictor
+        </h1>
 
-            <div class="brand-icon">
-                🤖
-            </div>
-
-            <div>
-
-                <h1>Perceptron AI</h1>
-
-                <p>
-                    Machine Learning Prediction Dashboard
-                </p>
-
-            </div>
-
-        </div>
-
-        <div class="status">
-
-            <div class="status-dot"></div>
-
-            Model Online
-
-        </div>
+        <p>
+            Perceptron Categorical Classifier
+        </p>
 
     </div>
 
 
-    <!-- MAIN GRID -->
+    <!-- Form -->
 
-    <div class="grid">
+    <form method="POST">
 
 
-        <!-- INPUT CARD -->
+        <!-- CGPA -->
 
-        <div class="card">
+        <div class="form-group">
 
-            <div class="card-title">
+            <label>
+                CGPA (0 – 10)
+            </label>
 
-                <span>📊</span>
+            <div class="input-wrapper">
 
-                <h2>Candidate Analysis</h2>
+                <input
+                    type="number"
+                    name="cgpa"
+                    step="0.1"
+                    min="0"
+                    max="10"
+                    placeholder="Enter your CGPA"
+                    value="{{ cgpa }}"
+                    required
+                >
 
             </div>
 
+        </div>
 
-            <form method="POST">
+
+        <!-- Resume Score -->
+
+        <div class="form-group">
+
+            <label>
+                Resume Score (0 – 10)
+            </label>
+
+            <div class="input-wrapper">
+
+                <input
+                    type="number"
+                    name="resume_score"
+                    step="0.1"
+                    min="0"
+                    max="10"
+                    placeholder="Enter your resume score"
+                    value="{{ resume_score }}"
+                    required
+                >
+
+            </div>
+
+        </div>
 
 
-                <!-- CGPA -->
+        <!-- Button -->
 
-                <div class="input-group">
+        <button
+            type="submit"
+            class="predict-btn">
 
-                    <div class="label-row">
+            Predict Status
 
-                        <label>
-                            Academic CGPA
-                        </label>
+        </button>
 
-                        <span class="range">
-                            0 – 10
+
+    </form>
+
+
+    <!-- Result -->
+
+    {% if prediction is not none %}
+
+        {% if prediction == 1 %}
+
+            <div class="result placed">
+
+                <div class="result-title">
+
+                    🎉 Category: Placed
+
+                </div>
+
+                <div class="confidence">
+
+                    <div class="confidence-header">
+
+                        <span>
+                            Model Confidence
+                        </span>
+
+                        <span class="confidence-value">
+                            {{ confidence }}%
                         </span>
 
                     </div>
 
-                    <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="10"
-                        name="cgpa"
-                        placeholder="Example: 8.5"
-                        value="{{ cgpa }}"
-                        required
-                    >
+                    <div class="progress">
+
+                        <div class="progress-bar"></div>
+
+                    </div>
 
                 </div>
 
+            </div>
 
-                <!-- Resume -->
+        {% else %}
 
-                <div class="input-group">
+            <div class="result not-placed">
 
-                    <div class="label-row">
+                <div class="result-title">
 
-                        <label>
-                            Resume Score
-                        </label>
+                    ⚠️ Category: Not Placed
 
-                        <span class="range">
-                            0 – 100
+                </div>
+
+                <div class="confidence">
+
+                    <div class="confidence-header">
+
+                        <span>
+                            Model Confidence
+                        </span>
+
+                        <span class="confidence-value">
+                            {{ confidence }}%
                         </span>
 
                     </div>
 
-                    <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        name="resume_score"
-                        placeholder="Example: 85"
-                        value="{{ resume_score }}"
-                        required
-                    >
+                    <div class="progress">
 
-                </div>
+                        <div class="progress-bar"></div>
 
-
-                <button
-                    class="predict-btn"
-                    type="submit">
-
-                    🚀 Run Prediction
-
-                </button>
-
-            </form>
-
-        </div>
-
-
-        <!-- MODEL INFORMATION -->
-
-        <div class="card">
-
-            <div class="card-title">
-
-                <span>🧠</span>
-
-                <h2>Model Information</h2>
-
-            </div>
-
-
-            <div class="model-icon">
-                ⚡
-            </div>
-
-            <div class="model-name">
-                Perceptron
-            </div>
-
-            <div class="model-description">
-
-                A supervised machine learning
-                classification algorithm used to
-                predict binary outcomes based on
-                input features.
-
-            </div>
-
-
-            <div class="stats">
-
-                <div class="stat">
-
-                    <div class="stat-label">
-                        ALGORITHM
-                    </div>
-
-                    <div class="stat-value">
-                        Perceptron
-                    </div>
-
-                </div>
-
-
-                <div class="stat">
-
-                    <div class="stat-label">
-                        TASK
-                    </div>
-
-                    <div class="stat-value">
-                        Classification
-                    </div>
-
-                </div>
-
-
-                <div class="stat">
-
-                    <div class="stat-label">
-                        FEATURES
-                    </div>
-
-                    <div class="stat-value">
-                        2 Inputs
-                    </div>
-
-                </div>
-
-
-                <div class="stat">
-
-                    <div class="stat-label">
-                        OUTPUT
-                    </div>
-
-                    <div class="stat-value">
-                        Binary
                     </div>
 
                 </div>
 
             </div>
-
-        </div>
-
-
-        {% if prediction is not none %}
-
-        <!-- RESULT -->
-
-        <div class="card result-card">
-
-            {% if prediction == 1 %}
-
-                <div class="result-icon success">
-                    🎯
-                </div>
-
-                <div class="result-title">
-                    Candidate Selected
-                </div>
-
-                <div class="result-subtitle">
-                    The model predicts a positive outcome.
-                </div>
-
-            {% else %}
-
-                <div class="result-icon danger">
-                    ⚠️
-                </div>
-
-                <div class="result-title">
-                    Candidate Not Selected
-                </div>
-
-                <div class="result-subtitle">
-                    The model predicts a negative outcome.
-                </div>
-
-            {% endif %}
-
-
-            <!-- CONFIDENCE -->
-
-            <div class="confidence">
-
-                <div class="confidence-top">
-
-                    <span>
-                        Model Confidence
-                    </span>
-
-                    <span class="confidence-value">
-                        {{ confidence }}%
-                    </span>
-
-                </div>
-
-                <div class="progress">
-
-                    <div class="progress-bar"></div>
-
-                </div>
-
-            </div>
-
-        </div>
 
         {% endif %}
 
+    {% endif %}
 
-        {% if error %}
 
-        <div class="card result-card">
+    <!-- Error -->
 
-            <div class="result-icon danger">
-                ❌
-            </div>
+    {% if error %}
 
-            <div class="result-title">
-                Invalid Input
-            </div>
+        <div class="error">
 
-            <div class="result-subtitle">
-                {{ error }}
-            </div>
+            ⚠️ {{ error }}
 
         </div>
 
-        {% endif %}
+    {% endif %}
+
+
+    <!-- Model Info -->
+
+    <div class="model-info">
+
+        <strong>Model:</strong> Perceptron<br>
+
+        <strong>Features:</strong>
+        CGPA + Resume Score<br>
+
+        <strong>Task:</strong>
+        Binary Classification
 
     </div>
 
-
-    <div class="footer">
-
-        Built with Python • Flask • Scikit-learn • Perceptron
-
-    </div>
 
 </div>
 
@@ -874,119 +747,133 @@ HTML = """
 """
 
 
-# ---------------------------------------------------
-# Prediction Route
-# ---------------------------------------------------
-
 @app.route("/", methods=["GET", "POST"])
 def home():
 
     prediction = None
+
     confidence = 0
-    error = None
 
     cgpa = ""
+
     resume_score = ""
+
+    error = None
+
 
     if request.method == "POST":
 
         try:
 
-            cgpa = float(request.form["cgpa"])
-            resume_score = float(request.form["resume_score"])
+            # Get input values
 
-            # Validation
+            cgpa = float(
+                request.form["cgpa"]
+            )
+
+            resume_score = float(
+                request.form["resume_score"]
+            )
+
+
+            # Validate CGPA
 
             if cgpa < 0 or cgpa > 10:
+
                 raise ValueError(
                     "CGPA must be between 0 and 10."
                 )
 
-            if resume_score < 0 or resume_score > 100:
+
+            # Validate Resume Score
+
+            if resume_score < 0 or resume_score > 10:
+
                 raise ValueError(
-                    "Resume Score must be between 0 and 100."
+                    "Resume Score must be between 0 and 10."
                 )
 
-            # Model input
-            input_data = np.array([
-                [cgpa, resume_score]
-            ])
+
+            # Prepare input
+
+            input_data = np.array(
+                [[cgpa, resume_score]]
+            )
+
 
             # Prediction
+
             prediction = int(
                 model.predict(input_data)[0]
             )
 
-            # -----------------------------------------
+
+            # ---------------------------------
             # Confidence
-            # -----------------------------------------
-            #
-            # Perceptron normally does not provide
-            # calibrated probabilities.
-            #
-            # We therefore use its decision margin
-            # to create a confidence-style score.
-            # -----------------------------------------
+            # ---------------------------------
 
-            if hasattr(model, "predict_proba"):
-
-                probabilities = model.predict_proba(
-                    input_data
-                )[0]
-
-                confidence = float(
-                    max(probabilities) * 100
-                )
-
-            elif hasattr(model, "decision_function"):
+            if hasattr(
+                model,
+                "decision_function"
+            ):
 
                 decision = float(
-                    model.decision_function(input_data)[0]
+                    model.decision_function(
+                        input_data
+                    )[0]
                 )
-
-                # Convert decision margin into
-                # confidence-style percentage.
 
                 confidence = (
                     1 /
-                    (1 + np.exp(-abs(decision)))
+                    (
+                        1 +
+                        np.exp(-abs(decision))
+                    )
                 ) * 100
 
             else:
 
-                confidence = 100
+                confidence = 100.0
 
 
             confidence = round(
-                min(max(confidence, 0), 100),
+                min(
+                    max(confidence, 0),
+                    100
+                ),
                 1
             )
+
 
         except ValueError as e:
 
             error = str(e)
 
-        except Exception:
+
+        except Exception as e:
 
             error = (
-                "Unable to make prediction. "
-                "Please check the model and input values."
+                "Prediction failed. "
+                "Please check your model."
             )
 
 
     return render_template_string(
+
         HTML,
+
         prediction=prediction,
+
         confidence=confidence,
-        error=error,
+
         cgpa=cgpa,
-        resume_score=resume_score
+
+        resume_score=resume_score,
+
+        error=error
+
     )
 
-
-# ---------------------------------------------------
-# Run Application
-# ---------------------------------------------------
 
 if __name__ == "__main__":
 
@@ -995,4 +882,3 @@ if __name__ == "__main__":
         port=5000,
         debug=False
     )
-```
