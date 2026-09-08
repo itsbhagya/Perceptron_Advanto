@@ -4,7 +4,7 @@ import numpy as np
 
 app = Flask(__name__)
 
-# Load Perceptron model
+# Load trained Perceptron model
 with open("perceptron.pkl", "rb") as file:
     model = pickle.load(file)
 
@@ -15,528 +15,648 @@ HTML = """
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    <title>Placement Predictor</title>
+<title>Placement Predictor</title>
 
-    <style>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
 
-        body {
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-            min-height: 100vh;
 
-            display: flex;
+body {
 
-            justify-content: center;
+    min-height: 100vh;
 
-            align-items: center;
+    display: flex;
 
-            padding: 20px;
+    justify-content: center;
 
-            font-family:
-                "Segoe UI",
-                Arial,
-                sans-serif;
+    align-items: center;
 
-            background:
-                radial-gradient(
-                    circle at 20% 20%,
-                    rgba(92, 82, 200, 0.20),
-                    transparent 35%
-                ),
-                radial-gradient(
-                    circle at 80% 80%,
-                    rgba(120, 60, 200, 0.15),
-                    transparent 35%
-                ),
-                linear-gradient(
-                    135deg,
-                    #101331,
-                    #171a42,
-                    #202052
-                );
+    padding: 20px;
 
-            color: white;
-        }
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(89, 80, 190, 0.25),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 80% 80%,
+            rgba(132, 70, 210, 0.20),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #10132f,
+            #171942,
+            #202052
+        );
 
-        /* Main Card */
+    color: white;
 
-        .card {
+    overflow-x: hidden;
+}
 
-            width: 100%;
 
-            max-width: 550px;
+/* Main Card */
 
-            padding: 46px 36px;
+.card {
 
-            border-radius: 28px;
+    width: 100%;
 
-            background:
-                rgba(37, 38, 82, 0.82);
+    max-width: 550px;
 
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.10);
+    padding: 42px 36px;
 
-            box-shadow:
-                0 30px 80px
-                rgba(0, 0, 0, 0.35);
+    border-radius: 27px;
 
-            backdrop-filter: blur(18px);
+    background:
+        rgba(37, 38, 82, 0.88);
 
-            animation:
-                cardAppear 0.7s ease;
-        }
+    border:
+        1px solid
+        rgba(255,255,255,0.10);
 
+    box-shadow:
+        0 30px 80px
+        rgba(0,0,0,0.40);
 
-        /* Heading */
+    backdrop-filter:
+        blur(18px);
 
-        .header {
+    animation:
+        cardAnimation 0.7s ease;
 
-            text-align: center;
+    position: relative;
 
-            margin-bottom: 35px;
-        }
+    z-index: 2;
+}
 
 
-        .header h1 {
+/* Heading */
 
-            font-size: 38px;
+.header {
 
-            font-weight: 700;
+    text-align: center;
 
-            letter-spacing: -1px;
+    margin-bottom: 34px;
+}
 
-            color: #f4f4ff;
 
-            margin-bottom: 8px;
-        }
+.header h1 {
 
+    font-size: 36px;
 
-        .header p {
+    font-weight: 700;
 
-            font-size: 16px;
+    color: #f5f5ff;
 
-            color: #a5a7c5;
+    margin-bottom: 8px;
+}
 
-        }
 
+.header p {
 
-        /* Form */
+    font-size: 15px;
 
-        .form-group {
+    color: #a3a5c4;
+}
 
-            margin-bottom: 25px;
-        }
 
+/* Input */
 
-        .form-group label {
+.form-group {
 
-            display: block;
+    margin-bottom: 24px;
+}
 
-            margin-bottom: 10px;
 
-            font-size: 16px;
+.form-group label {
 
-            font-weight: 600;
+    display: block;
 
-            color: #aeb0ca;
-        }
+    margin-bottom: 10px;
 
+    color: #afb1ca;
 
-        .input-wrapper {
+    font-size: 15px;
 
-            position: relative;
-        }
+    font-weight: 600;
+}
 
 
-        input {
+input {
 
-            width: 100%;
+    width: 100%;
 
-            height: 62px;
+    height: 61px;
 
-            padding:
-                0 20px;
+    padding:
+        0 18px;
 
-            border-radius: 15px;
+    border-radius: 14px;
 
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.10);
+    border:
+        1px solid
+        rgba(255,255,255,0.10);
 
-            outline: none;
+    background:
+        rgba(10,15,40,0.78);
 
-            background:
-                rgba(12, 16, 43, 0.72);
+    color: white;
 
-            color: #ffffff;
+    font-size: 17px;
 
-            font-size: 18px;
+    outline: none;
 
-            transition: all 0.3s ease;
-        }
+    transition: 0.3s;
+}
 
 
-        input::placeholder {
+input::placeholder {
 
-            color: #626581;
-        }
+    color: #60647f;
+}
 
 
-        input:focus {
+input:focus {
 
-            border-color: #7568ff;
+    border-color: #7669ff;
 
-            box-shadow:
-                0 0 0 4px
-                rgba(117, 104, 255, 0.12);
+    box-shadow:
+        0 0 0 4px
+        rgba(118,105,255,0.12);
+}
 
-            background:
-                rgba(12, 16, 43, 0.9);
-        }
 
+/* Button */
 
-        /* Predict Button */
+.predict-btn {
 
-        .predict-btn {
+    width: 100%;
 
-            width: 100%;
+    height: 60px;
 
-            height: 60px;
+    margin-top: 8px;
 
-            margin-top: 8px;
+    border: none;
 
-            border: none;
+    border-radius: 14px;
 
-            border-radius: 15px;
+    background:
+        linear-gradient(
+            90deg,
+            #6266f5,
+            #a64df0
+        );
 
-            background:
-                linear-gradient(
-                    90deg,
-                    #6266f5,
-                    #a64df0
-                );
+    color: white;
 
-            color: white;
+    font-size: 17px;
 
-            font-size: 18px;
+    font-weight: 700;
 
-            font-weight: 700;
+    cursor: pointer;
 
-            cursor: pointer;
+    box-shadow:
+        0 12px 30px
+        rgba(116,83,240,0.35);
 
-            box-shadow:
-                0 12px 30px
-                rgba(120, 80, 240, 0.30);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
 
-            transition:
-                transform 0.25s ease,
-                box-shadow 0.25s ease;
-        }
 
+.predict-btn:hover {
 
-        .predict-btn:hover {
+    transform:
+        translateY(-2px);
 
-            transform:
-                translateY(-2px);
+    box-shadow:
+        0 16px 35px
+        rgba(116,83,240,0.50);
+}
 
-            box-shadow:
-                0 16px 35px
-                rgba(120, 80, 240, 0.42);
-        }
 
+.predict-btn:active {
 
-        .predict-btn:active {
+    transform:
+        scale(0.97);
+}
 
-            transform:
-                scale(0.98);
-        }
 
+/* Result */
 
-        /* Result */
+.result {
 
-        .result {
+    margin-top: 32px;
 
-            margin-top: 35px;
+    padding: 19px;
 
-            padding: 20px;
+    border-radius: 14px;
 
-            border-radius: 15px;
+    text-align: center;
 
-            text-align: center;
+    animation:
+        resultAnimation 0.55s ease;
+}
 
-            animation:
-                resultAppear 0.55s ease;
-        }
 
+.result.placed {
 
-        .result.placed {
+    background:
+        rgba(34,197,94,0.12);
 
-            background:
-                rgba(34, 197, 94, 0.12);
+    border:
+        1px solid
+        rgba(34,197,94,0.30);
+}
 
-            border:
-                1px solid
-                rgba(34, 197, 94, 0.35);
-        }
 
+.result.not-placed {
 
-        .result.not-placed {
+    background:
+        rgba(239,68,68,0.12);
 
-            background:
-                rgba(239, 68, 68, 0.12);
+    border:
+        1px solid
+        rgba(239,68,68,0.30);
+}
 
-            border:
-                1px solid
-                rgba(239, 68, 68, 0.35);
-        }
 
+.result-title {
 
-        .result-title {
+    font-size: 20px;
 
-            font-size: 20px;
+    font-weight: 700;
 
-            font-weight: 700;
+    margin-bottom: 15px;
+}
 
-            margin-bottom: 12px;
-        }
 
+.placed .result-title {
 
-        .placed .result-title {
+    color: #67e89a;
+}
 
-            color: #69e89b;
-        }
 
+.not-placed .result-title {
 
-        .not-placed .result-title {
+    color: #ff7474;
+}
 
-            color: #ff7777;
-        }
 
+/* Confidence */
 
-        /* Confidence */
+.confidence {
 
-        .confidence {
+    margin-top: 10px;
 
-            margin-top: 17px;
+    text-align: left;
+}
 
-            text-align: left;
-        }
 
+.confidence-header {
 
-        .confidence-header {
+    display: flex;
 
-            display: flex;
+    justify-content: space-between;
 
-            justify-content: space-between;
+    margin-bottom: 8px;
 
-            margin-bottom: 8px;
+    font-size: 12px;
 
-            color: #aeb0ca;
+    color: #aeb0c7;
+}
 
-            font-size: 13px;
-        }
 
+.confidence-value {
 
-        .confidence-value {
+    color: #b5a7ff;
 
-            color: #b8aaff;
+    font-weight: bold;
+}
 
-            font-weight: 700;
-        }
 
+.progress {
 
-        .progress {
+    height: 8px;
 
-            width: 100%;
+    width: 100%;
 
-            height: 9px;
+    background:
+        rgba(255,255,255,0.08);
 
-            background:
-                rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
 
-            border-radius: 20px;
+    overflow: hidden;
+}
 
-            overflow: hidden;
-        }
 
+.progress-bar {
 
-        .progress-bar {
+    height: 100%;
 
-            height: 100%;
+    width: {{ confidence }}%;
 
-            width: {{ confidence }}%;
+    border-radius: 20px;
 
-            border-radius: 20px;
+    background:
+        linear-gradient(
+            90deg,
+            #6266f5,
+            #b04cf3
+        );
 
-            background:
-                linear-gradient(
-                    90deg,
-                    #6366f1,
-                    #b04cf3
-                );
+    animation:
+        progressAnimation 1s ease;
+}
 
-            animation:
-                progress 1.2s ease;
-        }
 
+/* Model Information */
 
-        /* Model Info */
+.model-info {
 
-        .model-info {
+    margin-top: 25px;
 
-            text-align: center;
+    text-align: center;
 
-            margin-top: 25px;
+    color: #74789b;
 
-            color: #777b9e;
+    font-size: 11px;
 
-            font-size: 12px;
+    line-height: 1.7;
+}
 
-            line-height: 1.6;
-        }
 
+.model-info strong {
 
-        .model-info strong {
+    color: #9699b8;
+}
 
-            color: #999cc0;
-        }
 
+/* Balloons */
 
-        /* Error */
+.balloon {
 
-        .error {
+    position: fixed;
 
-            margin-top: 25px;
+    bottom: -100px;
 
-            padding: 15px;
+    width: 38px;
 
-            border-radius: 13px;
+    height: 48px;
 
-            text-align: center;
+    border-radius:
+        50% 50% 45% 45%;
 
-            color: #ff8585;
+    z-index: 10;
 
-            background:
-                rgba(239, 68, 68, 0.10);
+    animation:
+        balloonUp linear forwards;
 
-            border:
-                1px solid
-                rgba(239, 68, 68, 0.25);
+    pointer-events: none;
+}
 
-            animation:
-                resultAppear 0.5s ease;
-        }
 
+.balloon::after {
 
-        /* Animations */
+    content: "";
 
-        @keyframes cardAppear {
+    position: absolute;
 
-            from {
+    bottom: -22px;
 
-                opacity: 0;
+    left: 50%;
 
-                transform:
-                    translateY(25px)
-                    scale(0.97);
-            }
+    width: 1px;
 
-            to {
+    height: 25px;
 
-                opacity: 1;
+    background:
+        rgba(255,255,255,0.55);
+}
 
-                transform:
-                    translateY(0)
-                    scale(1);
-            }
-        }
 
+.balloon::before {
 
-        @keyframes resultAppear {
+    content: "";
 
-            from {
+    position: absolute;
 
-                opacity: 0;
+    bottom: -5px;
 
-                transform:
-                    translateY(15px);
-            }
+    left: 50%;
 
-            to {
+    transform:
+        translateX(-50%);
 
-                opacity: 1;
+    width: 0;
 
-                transform:
-                    translateY(0);
-            }
-        }
+    height: 0;
 
+    border-left:
+        6px solid transparent;
 
-        @keyframes progress {
+    border-right:
+        6px solid transparent;
 
-            from {
+    border-top:
+        9px solid currentColor;
+}
 
-                width: 0%;
-            }
 
-            to {
+@keyframes balloonUp {
 
-                width: {{ confidence }}%;
-            }
-        }
+    0% {
 
+        transform:
+            translateY(0)
+            rotate(0deg);
 
-        /* Mobile */
+        opacity: 1;
+    }
 
-        @media (max-width: 600px) {
+    25% {
 
-            body {
+        transform:
+            translateY(-25vh)
+            rotate(8deg);
+    }
 
-                padding: 15px;
-            }
+    50% {
 
-            .card {
+        transform:
+            translateY(-50vh)
+            rotate(-8deg);
+    }
 
-                padding:
-                    35px 22px;
+    75% {
 
-                border-radius: 22px;
-            }
+        transform:
+            translateY(-75vh)
+            rotate(8deg);
+    }
 
-            .header h1 {
+    100% {
 
-                font-size: 30px;
-            }
+        transform:
+            translateY(-120vh)
+            rotate(-8deg);
 
-            .header p {
+        opacity: 0;
+    }
+}
 
-                font-size: 14px;
-            }
 
-            input {
+/* Confetti */
 
-                height: 58px;
-            }
+.confetti {
 
-            .predict-btn {
+    position: fixed;
 
-                height: 58px;
-            }
-        }
+    top: -20px;
 
-    </style>
+    width: 9px;
+
+    height: 15px;
+
+    z-index: 11;
+
+    animation:
+        confettiFall linear forwards;
+
+    pointer-events: none;
+}
+
+
+@keyframes confettiFall {
+
+    0% {
+
+        transform:
+            translateY(0)
+            rotate(0deg);
+
+        opacity: 1;
+    }
+
+    100% {
+
+        transform:
+            translateY(110vh)
+            rotate(720deg);
+
+        opacity: 0;
+    }
+}
+
+
+/* Animations */
+
+@keyframes cardAnimation {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(25px)
+            scale(0.97);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+@keyframes resultAnimation {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(15px);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
+@keyframes progressAnimation {
+
+    from {
+
+        width: 0%;
+    }
+
+    to {
+
+        width: {{ confidence }}%;
+    }
+}
+
+
+/* Mobile */
+
+@media(max-width:600px) {
+
+    .card {
+
+        padding:
+            35px 22px;
+    }
+
+
+    .header h1 {
+
+        font-size: 30px;
+    }
+
+
+    input {
+
+        height: 57px;
+    }
+
+
+    .predict-btn {
+
+        height: 57px;
+    }
+
+}
+
+</style>
 
 </head>
 
@@ -546,8 +666,6 @@ HTML = """
 
 <div class="card">
 
-
-    <!-- Header -->
 
     <div class="header">
 
@@ -562,12 +680,8 @@ HTML = """
     </div>
 
 
-    <!-- Form -->
-
     <form method="POST">
 
-
-        <!-- CGPA -->
 
         <div class="form-group">
 
@@ -575,25 +689,19 @@ HTML = """
                 CGPA (0 – 10)
             </label>
 
-            <div class="input-wrapper">
-
-                <input
-                    type="number"
-                    name="cgpa"
-                    step="0.1"
-                    min="0"
-                    max="10"
-                    placeholder="Enter your CGPA"
-                    value="{{ cgpa }}"
-                    required
-                >
-
-            </div>
+            <input
+                type="number"
+                name="cgpa"
+                step="0.1"
+                min="0"
+                max="10"
+                placeholder="Enter your CGPA"
+                value="{{ cgpa }}"
+                required
+            >
 
         </div>
 
-
-        <!-- Resume Score -->
 
         <div class="form-group">
 
@@ -601,25 +709,19 @@ HTML = """
                 Resume Score (0 – 10)
             </label>
 
-            <div class="input-wrapper">
-
-                <input
-                    type="number"
-                    name="resume_score"
-                    step="0.1"
-                    min="0"
-                    max="10"
-                    placeholder="Enter your resume score"
-                    value="{{ resume_score }}"
-                    required
-                >
-
-            </div>
+            <input
+                type="number"
+                name="resume_score"
+                step="0.1"
+                min="0"
+                max="10"
+                placeholder="Enter your resume score"
+                value="{{ resume_score }}"
+                required
+            >
 
         </div>
 
-
-        <!-- Button -->
 
         <button
             type="submit"
@@ -633,8 +735,6 @@ HTML = """
     </form>
 
 
-    <!-- Result -->
-
     {% if prediction is not none %}
 
         {% if prediction == 1 %}
@@ -647,6 +747,7 @@ HTML = """
 
                 </div>
 
+
                 <div class="confidence">
 
                     <div class="confidence-header">
@@ -656,10 +757,13 @@ HTML = """
                         </span>
 
                         <span class="confidence-value">
+
                             {{ confidence }}%
+
                         </span>
 
                     </div>
+
 
                     <div class="progress">
 
@@ -671,6 +775,166 @@ HTML = """
 
             </div>
 
+
+            <script>
+
+                window.onload = function() {
+
+                    createBalloons();
+
+                    createConfetti();
+
+                };
+
+
+                function createBalloons() {
+
+                    const colors = [
+
+                        "#ff4d6d",
+                        "#ffd166",
+                        "#06d6a0",
+                        "#4dabf7",
+                        "#c77dff",
+                        "#ff9f1c"
+
+                    ];
+
+
+                    for (
+                        let i = 0;
+                        i < 22;
+                        i++
+                    ) {
+
+                        const balloon =
+                            document.createElement(
+                                "div"
+                            );
+
+                        balloon.className =
+                            "balloon";
+
+
+                        balloon.style.left =
+                            Math.random() * 100 + "%";
+
+
+                        balloon.style.background =
+                            colors[
+                                Math.floor(
+                                    Math.random() *
+                                    colors.length
+                                )
+                            ];
+
+
+                        balloon.style.color =
+                            balloon.style.background;
+
+
+                        balloon.style.animationDuration =
+                            (4 + Math.random() * 4)
+                            + "s";
+
+
+                        balloon.style.animationDelay =
+                            (Math.random() * 1.5)
+                            + "s";
+
+
+                        document.body.appendChild(
+                            balloon
+                        );
+
+
+                        setTimeout(
+                            function() {
+
+                                balloon.remove();
+
+                            },
+                            9000
+                        );
+
+                    }
+
+                }
+
+
+                function createConfetti() {
+
+                    const colors = [
+
+                        "#6366f1",
+                        "#a855f7",
+                        "#facc15",
+                        "#22c55e",
+                        "#f43f5e",
+                        "#38bdf8"
+
+                    ];
+
+
+                    for (
+                        let i = 0;
+                        i < 70;
+                        i++
+                    ) {
+
+                        const piece =
+                            document.createElement(
+                                "div"
+                            );
+
+                        piece.className =
+                            "confetti";
+
+
+                        piece.style.left =
+                            Math.random() * 100 + "%";
+
+
+                        piece.style.background =
+                            colors[
+                                Math.floor(
+                                    Math.random() *
+                                    colors.length
+                                )
+                            ];
+
+
+                        piece.style.animationDuration =
+                            (2 + Math.random() * 3)
+                            + "s";
+
+
+                        piece.style.animationDelay =
+                            (Math.random() * 1)
+                            + "s";
+
+
+                        document.body.appendChild(
+                            piece
+                        );
+
+
+                        setTimeout(
+                            function() {
+
+                                piece.remove();
+
+                            },
+                            6000
+                        );
+
+                    }
+
+                }
+
+            </script>
+
+
         {% else %}
 
             <div class="result not-placed">
@@ -681,6 +945,7 @@ HTML = """
 
                 </div>
 
+
                 <div class="confidence">
 
                     <div class="confidence-header">
@@ -690,10 +955,13 @@ HTML = """
                         </span>
 
                         <span class="confidence-value">
+
                             {{ confidence }}%
+
                         </span>
 
                     </div>
+
 
                     <div class="progress">
 
@@ -710,8 +978,6 @@ HTML = """
     {% endif %}
 
 
-    <!-- Error -->
-
     {% if error %}
 
         <div class="error">
@@ -723,14 +989,17 @@ HTML = """
     {% endif %}
 
 
-    <!-- Model Info -->
-
     <div class="model-info">
 
-        <strong>Model:</strong> Perceptron<br>
+        <strong>Model:</strong>
+        Perceptron
+
+        &nbsp; | &nbsp;
 
         <strong>Features:</strong>
-        CGPA + Resume Score<br>
+        CGPA + Resume Score
+
+        <br>
 
         <strong>Task:</strong>
         Binary Classification
@@ -765,8 +1034,7 @@ def home():
 
         try:
 
-            # Get input values
-
+            # Get values
             cgpa = float(
                 request.form["cgpa"]
             )
@@ -776,7 +1044,7 @@ def home():
             )
 
 
-            # Validate CGPA
+            # Validation
 
             if cgpa < 0 or cgpa > 10:
 
@@ -785,8 +1053,6 @@ def home():
                 )
 
 
-            # Validate Resume Score
-
             if resume_score < 0 or resume_score > 10:
 
                 raise ValueError(
@@ -794,11 +1060,26 @@ def home():
                 )
 
 
-            # Prepare input
+            # IMPORTANT:
+            # Use DataFrame-like input with
+            # correct feature names.
 
-            input_data = np.array(
-                [[cgpa, resume_score]]
-            )
+            try:
+
+                import pandas as pd
+
+                input_data = pd.DataFrame(
+                    {
+                        "cgpa": [cgpa],
+                        "resume_score": [resume_score]
+                    }
+                )
+
+            except ImportError:
+
+                input_data = np.array(
+                    [[cgpa, resume_score]]
+                )
 
 
             # Prediction
@@ -808,9 +1089,7 @@ def home():
             )
 
 
-            # ---------------------------------
             # Confidence
-            # ---------------------------------
 
             if hasattr(
                 model,
@@ -827,7 +1106,9 @@ def home():
                     1 /
                     (
                         1 +
-                        np.exp(-abs(decision))
+                        np.exp(
+                            -abs(decision)
+                        )
                     )
                 ) * 100
 
@@ -854,7 +1135,7 @@ def home():
 
             error = (
                 "Prediction failed. "
-                "Please check your model."
+                "Please check the model and inputs."
             )
 
 
