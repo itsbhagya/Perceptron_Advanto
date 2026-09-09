@@ -1,137 +1,90 @@
 import os
 import pickle
 import numpy as np
-import streamlit as st
-from sklearn.linear_model import Perceptron
+from flask import Flask, render_template, request
 
-# ==============================================================================
-# 1. Automatic Model Creation Logic (Runs if model.pkl does not exist)
-# ==============================================================================
-MODEL_FILE = "model.pkl"
+app = Flask(__name__)
 
-if not os.path.exists(MODEL_FILE):
-    # Training sample data (CGPA and Resume Score)
-    # Features: ['cgpa', 'resume_score']
-    X_train = np.array([
-        [5.0, 50],
-        [6.0, 60],
-        [6.5, 65],
-        [7.0, 70],
-        [7.8, 80],
-        [8.5, 85],
-        [9.0, 90],
-        [9.5, 95]
-    ])
-    # Labels: 0 = Not Placed, 1 = Placed
-    y_train = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+# Load the saved Perceptron model
+MODEL_PATH = "perceptron.pkl"
+model = None
 
-    # Perceptron Model Configuration matching standard scikit-learn settings
-    model = Perceptron(max_iter=1000, random_state=0)
-    model.fit(X_train, y_train)
+if os.path.exists(MODEL_PATH):
+    with open(MODEL_PATH, "rb") as f:
+        model = pickle.load(f)
 
-    # Save model as model.pkl
-    with open(MODEL_FILE, "wb") as f:
-        pickle.dump(model, f)
-
-# ==============================================================================
-# 2. Streamlit Web Application Interface
-# ==============================================================================
-st.set_page_config(
-    page_title="Placement Predictor",
-    page_icon="🎓",
-    layout="centered"
-)
-
-# Custom Styling
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #0e1117;
-        color: #ffffff;
-    }
-    .stButton>button {
-        width: 100%;
-        background-color: #00c853;
-        color: white;
-        font-size: 18px;
-        font-weight: bold;
-        padding: 12px;
-        border-radius: 8px;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #00e676;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# App Title
-st.title("🎓 Candidate Placement Predictor")
-st.write("Aapne `CGPA` aur `Resume Score` ke basis par model ka outcome predict karein.")
-
-st.divider()
-
-# Load Saved Model Function
-@st.cache_resource
-def get_model():
-    with open(MODEL_FILE, "rb") as f:
-        return pickle.load(f)
-
-perceptron_model = get_model()
-
-# Input UI Fields
-col1, col2 = st.columns(2)
-
-with col1:
-    cgpa_input = st.number_input(
-        "Enter CGPA (0.0 - 10.0)",
-        min_value=0.0,
-        max_value=10.0,
-        value=7.5,
-        step=0.1
-    )
-
-with col2:
-    resume_input = st.number_input(
-        "Enter Resume Score (0 - 100)",
-        min_value=0,
-        max_value=100,
-        value=75,
-        step=1
-    )
-
-st.write("")  # Spacing
-
-# Prediction Button & Logic
-if st.button("🔮 Check Placement Status"):
-    # Reshape input data for Scikit-Learn
-    features = np.array([[cgpa_input, resume_input]])
+@app.route("/", methods=["GET", "POST"])
+def index():
+    prediction_text = None
+    status = None
     
-    # Predict output
-    result = perceptron_model.predict(features)[0]
-    
-    st.divider()
-    
-    if result == 1:
-        st.balloons()
-        st.success("🎉 **Selection Chances High:** Candidate Placement ke liye eligible hai!")
-    else:
-        st.error("⚠️ **Selection Chances Low:** Candidate ko CGPA / Resume Score improve karne ki zaroorat hai.")
+    if request.method == "POST":
+        try:
+            cgpa = float(request.form.get("cgpa"))
+            resume_score = float(request.form.get("resume_score"))
+            
+            if model:
+                # Features: [cgpa, resume_score]
+                input_data = np.array([[cgpa, resume_score]])
+                prediction = model.predict(input_data)[0]
+                
+                if prediction == 1:
+                    prediction_text = "Congratulations! High Placement Chance."
+                    status = "success"
+                else:
+                    prediction_text = "Needs Improvement. Low Placement Chance."
+                    status = "danger"
+            else:
+                prediction_text = "Model file not found!"
+                status = "error"
+        except Exception as e:
+            prediction_text = f"Error processing input: {str(e)}"
+            status = "error"
 
-st.caption("Model Architecture: Scikit-Learn Perceptron Classifier")
+    return render_template("index.html", prediction_text=prediction_text, status=status)
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 shadow-2xl rounded-2xl p-8 max-w-md w-full">
+        <h1 class="text-3xl font-extrabold text-center text-indigo-400 mb-2">Placement Predictor</h1>
+        <p class="text-slate-400 text-sm text-center mb-6">Perceptron Machine Learning Model</p>
 
+        <form method="POST" class="space-y-5">
+            <div>
+                <label for="cgpa" class="block text-sm font-medium text-slate-300 mb-1">CGPA (e.g., 8.5)</label>
+                <input type="number" step="0.01" min="0" max="10" name="cgpa" id="cgpa" required 
+                       class="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white">
+            </div>
 
+            <div>
+                <label for="resume_score" class="block text-sm font-medium text-slate-300 mb-1">Resume Score (e.g., 7.5)</label>
+                <input type="number" step="0.01" min="0" max="10" name="resume_score" id="resume_score" required 
+                       class="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white">
+            </div>
 
+            <button type="submit" 
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-lg hover:shadow-indigo-500/25">
+                Predict Outcome
+            </button>
+        </form>
 
-
-
-
-
-
-
-
-
-
-
-
+        {% if prediction_text %}
+        <div class="mt-6 p-4 rounded-lg text-center font-medium
+            {% if status == 'success' %} bg-emerald-950 border border-emerald-700 text-emerald-300
+            {% elif status == 'danger' %} bg-rose-950 border border-rose-700 text-rose-300
+            {% else %} bg-amber-950 border border-amber-700 text-amber-300 {% endif %}">
+            {{ prediction_text }}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
